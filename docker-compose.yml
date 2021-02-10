@@ -1,0 +1,19 @@
+version: "3"
+services:
+  joplin:
+    build:
+      context: .
+      args:
+        NODE_VERSION: 14.15.5
+        JOPLIN_VERSION: 1.6.4
+    image: jspiers/joplin-cli:14.15.5-1.6.4
+    volumes:
+      - ./joplin-config.json:/secrets/joplin-config.json
+      - type: volume
+        source: joplin-data
+        target: /home/node/.config/joplin
+    # ports:
+    #   - "41184:41184"
+    # command: ["joplin", "server", "start"]
+volumes:
+  joplin-data:
