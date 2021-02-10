@@ -1,2 +1,2 @@
 # docker-joplin-cli
-Dockerized Joplin terminal client
+Dockerized [Joplin](https://github.com/laurent22/joplin/) terminal client
