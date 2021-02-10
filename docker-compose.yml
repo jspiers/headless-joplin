@@ -6,7 +6,7 @@ services:
       args:
         NODE_VERSION: 14.15.5
         JOPLIN_VERSION: 1.6.4
-    image: jspiers/joplin-cli:14.15.5-1.6.4
+    image: jspiers/joplin-cli:1.6.4-node-14.15.5
     volumes:
       - ./joplin-config.json:/secrets/joplin-config.json
       - type: volume
