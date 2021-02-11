@@ -3,9 +3,10 @@ Dockerized [Joplin](https://github.com/laurent22/joplin/) terminal client
 
 ## Basic Usage:
 ```
-docker-compose run --build --rm joplin
+docker-compose build
+docker-compose run --rm joplin
 ```
-
+or
 ```
 docker build . -t joplin-cli
 docker run --rm -it joplin-cli
