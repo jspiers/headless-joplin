@@ -4,11 +4,11 @@ ARG NODE_VERSION=lts
 ARG JOPLIN_VERSION=latest
 FROM node:${NODE_VERSION}-buster-slim as builder
 RUN apt-get update \
- && apt-get install -y \
-        git \
-        python-minimal \
-        build-essential \
-        libsecret-1-0 \
+ && apt-get install --no-upgrade -y \
+       git \
+       python-minimal \
+       build-essential \
+       libsecret-1-0 \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -18,6 +18,11 @@ RUN NPM_CONFIG_PREFIX=/home/node/.joplin-bin npm --unsafe-perm -g install "jopli
 
 # Copy the built Joplin directory into a clean Debian image
 FROM node:${NODE_VERSION}-buster-slim as release
+RUN apt-get update \
+ && apt-get install --no-upgrade -y \
+       tini \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 COPY --from=builder --chown=node:node /home/node/.joplin-bin /home/node/.joplin-bin
 ENV PATH=$PATH:/home/node/.joplin-bin/bin
 
@@ -26,7 +31,7 @@ ENV PATH=$PATH:/home/node/.joplin-bin/bin
 ENV JOPLIN_CONFIG_JSON=/secrets/joplin-config.json
 VOLUME /secrets
 COPY --chown=node:node entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 WORKDIR /home/node
 CMD ["bash"]
 
