@@ -1,29 +1,35 @@
-# docker-joplin-cli
-Dockerized [Joplin](https://github.com/laurent22/joplin/) terminal client
+# headless-joplin
+Dockerized instance of [Joplin](https://github.com/laurent22/joplin/) terminal client.
+Clipper server made accessible via an nginx reverse proxy.
+Configurable by mounting a Joplin config JSON file to /secrets/joplin-config.json
 
 ## Basic Usage:
 ```
-docker-compose build
-docker-compose run --rm joplin
+docker-compose up
 ```
 or
 ```
-docker build . -t joplin-cli
-docker run --rm -it joplin-cli
+docker build . -t headless-joplin
+docker run --rm -p 3000:80 headless-joplin
+```
+Check that the Clipper server is running from your host's command-line:
+```
+curl http://localhost:3000/ping
+```
+You should get a response of `JoplinClipperServer`
+
+## Build Options:
+### Set Node and/or Joplin versions
+```
+docker build . -t headless-joplin --build-arg NODE_VERSION=15 --build-arg JOPLIN_VERSION=1.6.4
 ```
 
-### Build Options:
-#### Set Node and/or Joplin versions
-```
-docker build . -t joplin-cli --build-arg NODE_VERSION=15 --build-arg JOPLIN_VERSION=1.6.4
-```
-
-### Run Options:
-#### Joplin Config File
-Add a Joplin configuration JSON file o(i.e. with the contents of a `joplin config --export` from another Joplin instance) to `./joplin-config.json` and it will be loaded via `joplin --import-file` in the docker container.
+## Run Options:
+### Joplin Config File
+Add a Joplin configuration JSON file (i.e. with the contents of a `joplin config --export` from another Joplin instance) to `./joplin-config.json` and it will be loaded via `joplin --import` in the docker container.
 
 ```
-docker run --rm -it -v $(pwd)/joplin-config.json:/secrets/joplin-config.json joplin-cli
+docker run --rm -p 3000:80 -v $(pwd)/joplin-config.json:/secrets/joplin-config.json headless-joplin
 ```
 
 Sample `joplin-config.json` for S3-based sync:
@@ -34,21 +40,19 @@ Sample `joplin-config.json` for S3-based sync:
   "sync.8.path": "bucket",
   "sync.8.username": "S3ACCESSKEY",
   "sync.8.password": "S3SECRET",
-  "sync.interval": 300,
   "sync.maxConcurrentConnections": 5,
   "sync.resourceDownloadMode": "manual",
   "sync.wipeOutFailSafe": true,
-  "api.port": 41187,
-  "api.token": "abc123"
+  "api.token": "mysupersecrettoken123"
 }
 ```
 
-#### Persistent Joplin Volume
+### Persistent Joplin Volume
 ```
-docker run --rm -it -v $(pwd)/joplin-config.json:/secrets/joplin-config.json -v joplin-data:/home/node/.config/joplin joplin-cli
+docker run --rm -p 3000:80 -v $(pwd)/joplin-config.json:/secrets/joplin-config.json -v joplin-data:/home/node/.config/joplin headless-joplin
 ```
 
-#### Run Joplin Server
+### Interactive bash shell (instead of starting Joplin Clipper server)
 ```
-docker run --rm -v $(pwd)/joplin-config.json:/secrets/joplin-config.json -v joplin-data:/home/node/.config/joplin joplin-cli joplin server start
+docker run --rm -p 3000:80 -v $(pwd)/joplin-config.json:/secrets/joplin-config.json -v joplin-data:/home/node/.config/joplin -it headless-joplin bash
 ```
