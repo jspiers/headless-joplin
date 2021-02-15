@@ -1,7 +1,9 @@
 # headless-joplin
 Dockerized instance of [Joplin](https://github.com/laurent22/joplin/) terminal client.
+
 Clipper server made accessible via an nginx reverse proxy.
-Configurable by mounting a Joplin config JSON file to /secrets/joplin-config.json
+
+Configure Joplin by mounting a Joplin config JSON file to /secrets/joplin-config.json
 
 ## Basic Usage:
 ```
