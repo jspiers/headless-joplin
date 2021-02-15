@@ -5,16 +5,17 @@ Dockerized instance of the [Joplin](https://github.com/laurent22/joplin/) termin
 ```
 docker-compose up
 ```
-or build it yourself and interact via a Bash shell instead of running the clipper server:
-```
-docker build . -t headless-joplin
-docker run --rm -p 3000:80 -it headless-joplin bash
-```
-Check that the Clipper server is running from your host's command-line:
+and check that the Clipper server is running from your host's command-line:
 ```
 curl http://localhost:3000/ping
 ```
 You should get a response of `JoplinClipperServer`
+
+Or build it yourself and interact via a Bash shell instead of running the clipper server:
+```
+docker build . -t headless-joplin
+docker run --rm -p 3000:80 -it headless-joplin bash
+```
 
 ## Build Options:
 ### Set Node and/or Joplin versions
