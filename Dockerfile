@@ -2,9 +2,11 @@
 # Set build arguments to specify particular versions of node and Joplin
 ARG NODE_VERSION=lts
 ARG JOPLIN_VERSION=latest
-FROM node:${NODE_VERSION}-buster-slim as builder
+FROM node:${NODE_VERSION}-buster-slim as base
+FROM base as builder
+# Install build packages necessary to compile Joplin dependencies
 RUN apt-get update \
- && apt-get install --no-upgrade -y \
+ && DEBIAN_FRONTEND=noninteractive apt-get install --no-upgrade -y \
        git \
        python-minimal \
        build-essential \
@@ -12,30 +14,41 @@ RUN apt-get update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-# https://github.com/nodejs/node-gyp/issues/1236#issuecomment-309447800
+# Install Joplin as user "node"
 USER node
 RUN NPM_CONFIG_PREFIX=/home/node/.joplin-bin npm --unsafe-perm -g install "joplin@${JOPLIN_VERSION}"
 
-# Copy the built Joplin directory into a clean Debian image
-FROM node:${NODE_VERSION}-buster-slim as release
+# Start again from a clean Debian image devoid of all the build packages
+FROM base as release
 RUN apt-get update \
- && apt-get install --no-upgrade -y \
+ && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-upgrade -y \
        tini \
+       nginx \
+       jq \
+       gosu \
+       cron \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
-COPY --from=builder --chown=node:node /home/node/.joplin-bin /home/node/.joplin-bin
-ENV PATH=$PATH:/home/node/.joplin-bin/bin
+
+# Configure nginx reverse proxy to be able to access joplin server on localhost port
+RUN unlink /etc/nginx/sites-enabled/default
+COPY nginx-reverse-proxy.conf /etc/nginx/sites-available/reverse-proxy.conf
+RUN ln -s /etc/nginx/sites-available/reverse-proxy.conf /etc/nginx/sites-enabled/reverse-proxy.conf
 
 # Configure Joplin by importing a JSON configuration file from a mounted volume
 # (updated entrypoint script performs "joplin config --import-file $JOPLIN_CONFIG_JSON")
+COPY --from=builder --chown=node:node /home/node/.joplin-bin /home/node/.joplin-bin
+ENV PATH=$PATH:/home/node/.joplin-bin/bin
 ENV JOPLIN_CONFIG_JSON=/secrets/joplin-config.json
 VOLUME /secrets
 COPY --chown=node:node entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 WORKDIR /home/node
-CMD ["bash"]
+ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
+CMD ["joplin", "server", "start"]
+
+# Set up cron job for periodic "joplin sync"
+COPY joplin-sync.cron /etc/cron.d/joplin-sync
 
 # Joplin config directory can be mounted for persistence of config and database
-USER node
-RUN mkdir -p /home/node/.config/joplin
+RUN mkdir -p /home/node/.config/joplin && chown node:node /home/node/.config/joplin
 VOLUME /home/node/.config/joplin

@@ -1,0 +1,2 @@
+PATH=$PATH
+*/5 * * * * node joplin sync >> /home/node/joplin-sync.log 2>&1
