@@ -23,17 +23,12 @@ FROM base as release
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-upgrade -y \
        tini \
-       nginx \
        jq \
        gosu \
        cron \
+       socat \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
-
-# Configure nginx reverse proxy to be able to access joplin server on localhost port
-RUN unlink /etc/nginx/sites-enabled/default
-COPY nginx-reverse-proxy.conf /etc/nginx/sites-available/reverse-proxy.conf
-RUN ln -s /etc/nginx/sites-available/reverse-proxy.conf /etc/nginx/sites-enabled/reverse-proxy.conf
 
 # Configure Joplin by importing a JSON configuration file from a mounted volume
 # (updated entrypoint script performs "joplin config --import-file $JOPLIN_CONFIG_JSON")
@@ -48,6 +43,9 @@ CMD ["joplin", "server", "start"]
 
 # Set up cron job for periodic "joplin sync"
 COPY joplin-sync.cron /etc/cron.d/joplin-sync
+
+# Expose external port, forwarded to Joplin server using socat (see entrypoint.sh script)
+EXPOSE 80/tcp
 
 # Joplin config directory can be mounted for persistence of config and database
 RUN mkdir -p /home/node/.config/joplin && chown node:node /home/node/.config/joplin

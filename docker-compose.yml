@@ -14,6 +14,6 @@ services:
         target: /home/node/.config/joplin
     ports:
       - "3000:80"
-    # command: ["joplin", "server", "start"]
+    command: ["joplin", "server", "start"]
 volumes:
   joplin-data:

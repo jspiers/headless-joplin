@@ -1,5 +1,5 @@
 # headless-joplin
-Dockerized instance of the [Joplin](https://github.com/laurent22/joplin/) terminal client, with its web clipper service made externally accessible using an nginx reverse proxy. Syncing and other Joplin parameters may be configured by mounting a Joplin config JSON file to `/secrets/joplin-config.json`
+Dockerized instance of the [Joplin](https://github.com/laurent22/joplin/) terminal client, with its web clipper service made externally acessible using [socat](https://www.cyberciti.biz/faq/linux-unix-tcp-port-forwarding/) to forward the container's external port `0.0.0.0:80` to the Joplin Clipper Server on `127.0.0.1:41184`. Joplin sync and other parameters are configured by mounting a Joplin config JSON file to `/secrets/joplin-config.json`
 
 ## Basic Usage:
 ```

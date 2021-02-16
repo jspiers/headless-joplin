@@ -14,8 +14,9 @@ fi
 echo "Starting \"joplin sync\" cron job..."
 cron
 
-# Start nginx reverse proxy
-service nginx start
-echo "nginx reverse proxy 0.0.0.0:80 => localhost:41184 (Joplin Clipper server)"
+# Forward external port 80 to Joplin server on 127.0.0.1:41184
+socat -d -d -lf /var/log/socat.log TCP-LISTEN:80,fork TCP:127.0.0.1:41184 &
+echo "Forwarding 0.0.0.0:80 => localhost:41184 (Joplin Clipper server) via socat and logging to /var/log/socat.log"
 
+# exec "$@"
 exec gosu node "$@"
