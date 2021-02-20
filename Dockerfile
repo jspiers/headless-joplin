@@ -34,6 +34,7 @@ RUN apt-get update \
        cron \
        socat \
        logrotate \
+       curl \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -54,3 +55,7 @@ CMD ["joplin", "server", "start"]
 
 # Expose socat external port, forwarded to Joplin server (see entrypoint.sh script)
 EXPOSE 80/tcp
+
+# Test health of Joplin Clipper server with periodic GET /ping
+HEALTHCHECK --start-period=15s --interval=30s --retries=1 --timeout=10s \
+      CMD curl -s http://localhost/ping | jq -R -e '. == "JoplinClipperServer"'
