@@ -7,10 +7,10 @@ FROM base as builder
 # Install build packages necessary to compile Joplin dependencies
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install --no-upgrade -y \
-       git \
-       python-minimal \
-       build-essential \
-       libsecret-1-0 \
+      git \
+      python-minimal \
+      build-essential \
+      libsecret-1-0 \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -28,13 +28,13 @@ ENV PATH=$PATH:/home/node/.joplin-bin/bin
 # Install some utilities for the release image
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-upgrade -y \
-       tini \
-       jq \
-       gosu \
-       cron \
-       socat \
-       logrotate \
-       curl \
+      tini \
+      jq \
+      gosu \
+      cron \
+      socat \
+      logrotate \
+      curl \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -57,5 +57,5 @@ CMD ["joplin", "server", "start"]
 EXPOSE 80/tcp
 
 # Test health of Joplin Clipper server with periodic GET /ping
-HEALTHCHECK --start-period=15s --interval=30s --retries=1 --timeout=10s \
+HEALTHCHECK --interval=30s --retries=1 --timeout=5s \
       CMD curl -s http://localhost/ping | jq -R -e '. == "JoplinClipperServer"'
