@@ -20,6 +20,12 @@ RUN NPM_CONFIG_PREFIX=/home/node/.joplin-bin npm --unsafe-perm -g install "jopli
 
 # Start again from a clean Debian image devoid of all the build packages
 FROM base as release
+
+# Copy built joplin into new image and add it to the PATH
+COPY --from=builder --chown=node:node /home/node/.joplin-bin /home/node/.joplin-bin
+ENV PATH=$PATH:/home/node/.joplin-bin/bin
+
+# Install some utilities for the release image
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-upgrade -y \
        tini \
@@ -27,26 +33,24 @@ RUN apt-get update \
        gosu \
        cron \
        socat \
+       logrotate \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
 # Configure Joplin by importing a JSON configuration file from a mounted volume
 # (updated entrypoint script performs "joplin config --import-file $JOPLIN_CONFIG_JSON")
-COPY --from=builder --chown=node:node /home/node/.joplin-bin /home/node/.joplin-bin
-ENV PATH=$PATH:/home/node/.joplin-bin/bin
 ENV JOPLIN_CONFIG_JSON=/secrets/joplin-config.json
 VOLUME /secrets
-COPY --chown=node:node entrypoint.sh /entrypoint.sh
-WORKDIR /home/node
-ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
-CMD ["joplin", "server", "start"]
-
-# Set up cron job for periodic "joplin sync"
-COPY joplin-sync.cron /etc/cron.d/joplin-sync
-
-# Expose external port, forwarded to Joplin server using socat (see entrypoint.sh script)
-EXPOSE 80/tcp
 
 # Joplin config directory can be mounted for persistence of config and database
 RUN mkdir -p /home/node/.config/joplin && chown node:node /home/node/.config/joplin
 VOLUME /home/node/.config/joplin
+
+# Set up entrypoint and working environment
+WORKDIR /home/node
+COPY --chown=node:node entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
+CMD ["joplin", "server", "start"]
+
+# Expose socat external port, forwarded to Joplin server (see entrypoint.sh script)
+EXPOSE 80/tcp

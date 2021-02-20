@@ -11,12 +11,38 @@ else
 fi
 
 # https://joplinapp.org/terminal/#synchronisation
-echo "Starting \"joplin sync\" cron job..."
-cron
+JOPLIN_SYNC_LOG="/var/log/joplin-sync.log"
+cat > /etc/cron.d/joplin-sync <<EOF
+PATH=$PATH
+*/5 * * * * node joplin sync >> $JOPLIN_SYNC_LOG 2>&1
+EOF
+touch $JOPLIN_SYNC_LOG
+chown node:node $JOPLIN_SYNC_LOG
+echo "Periodic \"joplin sync\" cron job logs to $JOPLIN_SYNC_LOG"
 
 # Forward external port 80 to Joplin server on 127.0.0.1:41184
-socat -d -d -lf /var/log/socat.log TCP-LISTEN:80,fork TCP:127.0.0.1:41184 &
-echo "Forwarding 0.0.0.0:80 => localhost:41184 (Joplin Clipper server) via socat and logging to /var/log/socat.log"
+SOCAT_LOG="/var/log/socat.log"
+socat -d -d -lf $SOCAT_LOG TCP-LISTEN:80,fork TCP:127.0.0.1:41184 &
+cat <<EOF
+Forwarding 0.0.0.0:80 => localhost:41184 (Joplin Clipper server) via socat
+  ... logging to $SOCAT_LOG
+EOF
 
-# exec "$@"
+# Set up log rotation for both joplin and socat
+cat > /etc/logrotate.d/joplin <<EOF
+$JOPLIN_SYNC_LOG
+$SOCAT_LOG
+{
+    weekly
+    rotate 8
+    size 10M
+    compress
+    delaycompress
+    notifempty
+}
+EOF
+
+# Start cron
+service cron start
+
 exec gosu node "$@"
