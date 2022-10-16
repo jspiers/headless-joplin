@@ -1,7 +1,7 @@
 # Build and install Joplin CLI into a first image
 # Set build arguments to specify particular versions of node and Joplin
 ARG NODE_VERSION=lts-buster-slim
-ARG JOPLIN_VERSION=2.4.1
+ARG JOPLIN_VERSION=2.9.1
 FROM node:${NODE_VERSION} as base
 FROM base as builder
 # Install build packages necessary to compile Joplin dependencies
