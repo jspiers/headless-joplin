@@ -4,9 +4,9 @@ services:
     # build:
     #   context: .
     #   args:
-    #     NODE_VERSION: 14.15.5-buster-slim
+    #     NODE_VERSION: 16.18.0-buster-slim
     #     JOPLIN_VERSION: 2.9.1
-    image: jspiers/headless-joplin:2.9.1-node-14.15.5
+    image: jspiers/headless-joplin:2.9.1-node-16.18.0
     volumes:
       - ./joplin-config.json:/secrets/joplin-config.json
       - type: volume
