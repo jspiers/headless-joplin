@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Display Joplin version
+gosu node joplin version
+
 # Import Joplin configuration from JSON, if present in /secrets volume
 # readonly JOPLIN_CONFIG_JSON="/secrets/joplin-config.json"
 if [ -f $JOPLIN_CONFIG_JSON ]; then
