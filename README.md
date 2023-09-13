@@ -3,7 +3,7 @@ Dockerized instance of the [Joplin](https://github.com/laurent22/joplin/) termin
 
 ## Basic Usage:
 ```
-docker-compose up
+docker compose up
 ```
 and check that the Clipper server is running from your host's command-line:
 ```
