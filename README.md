@@ -1,5 +1,5 @@
 # headless-joplin
-Dockerized instance of the [Joplin](https://github.com/laurent22/joplin/) terminal client, with its web clipper service made externally acessible using [socat](https://www.cyberciti.biz/faq/linux-unix-tcp-port-forwarding/) to forward the container's external port `0.0.0.0:80` to the Joplin Clipper Server on `127.0.0.1:41184`. Joplin sync and other parameters are configured by mounting a Joplin config JSON file to `/secrets/joplin-config.json`
+Dockerized instance of the [Joplin](https://github.com/laurent22/joplin/) terminal client, with its web clipper service made externally acessible using [socat](https://www.cyberciti.biz/faq/linux-unix-tcp-port-forwarding/) to forward the container's external port `0.0.0.0:80` to the Joplin Clipper Server on `127.0.0.1:41184`. Joplin sync and other parameters are configured by mounting a Joplin config JSON file to `/run/secrets/joplin-config.json`
 
 ## Basic Usage:
 ```
@@ -28,11 +28,11 @@ docker build . -t headless-joplin --build-arg NODE_VERSION=15-buster-slim --buil
 Add a Joplin configuration JSON file (i.e. with the contents of a `joplin config --export` from another Joplin instance) to `./joplin-config.json` and it will be loaded via `joplin --import` in the docker container.
 
 ```
-docker run --rm -p 3000:80 -v $(pwd)/joplin-config.json:/secrets/joplin-config.json headless-joplin
+docker run --rm -p 3000:80 -v $(pwd)/joplin-config.json:/run/secrets/joplin-config.json headless-joplin
 ```
 
 Sample `joplin-config.json` for S3-based sync:
-```
+```json
 {
   "sync.target": 8,
   "sync.8.url": "https://s3.us-east-1.wasabisys.com",
@@ -48,10 +48,10 @@ Sample `joplin-config.json` for S3-based sync:
 
 ### Persistent Joplin Volume
 ```
-docker run --rm -p 3000:80 -v $(pwd)/joplin-config.json:/secrets/joplin-config.json -v joplin-data:/home/node/.config/joplin headless-joplin
+docker run --rm -p 3000:80 -v $(pwd)/joplin-config.json:/run/secrets/joplin-config.json -v joplin-data:/home/node/.config/joplin headless-joplin
 ```
 
 ### Interactive bash shell (instead of starting Joplin Clipper server)
 ```
-docker run --rm -p 3000:80 -v $(pwd)/joplin-config.json:/secrets/joplin-config.json -v joplin-data:/home/node/.config/joplin -it headless-joplin bash
+docker run --rm -p 3000:80 -v $(pwd)/joplin-config.json:/run/secrets/joplin-config.json -v joplin-data:/home/node/.config/joplin -it headless-joplin bash
 ```

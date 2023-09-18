@@ -5,13 +5,13 @@ ARG JOPLIN_VERSION=latest
 FROM node:${NODE_VERSION}-buster-slim as base
 FROM base as builder
 # Install build packages necessary to compile Joplin dependencies
-# trunk-ignore(hadolint/DL3008)
+# trunk-ignore(hadolint/DL3008): allow unspecified apt package versions
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-upgrade -y \
-      git \
-      python-minimal \
-      build-essential \
-      libsecret-1-0 \
+     git \
+     python-minimal \
+     build-essential \
+     libsecret-1-0 \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -27,23 +27,18 @@ COPY --from=builder --chown=node:node /home/node/.joplin-bin /home/node/.joplin-
 ENV PATH=$PATH:/home/node/.joplin-bin/bin
 
 # Install some utilities for the release image
-# trunk-ignore(hadolint/DL3008)
+# trunk-ignore(hadolint/DL3008): allow unspecified apt package versions
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-upgrade -y \
-      tini \
-      jq \
-      gosu \
-      cron \
-      socat \
-      logrotate \
-      curl \
+     tini \
+     jq \
+     gosu \
+     cron \
+     socat \
+     logrotate \
+     curl \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
-
-# Configure Joplin by importing a JSON configuration file from a mounted volume
-# (updated entrypoint script performs "joplin config --import-file $JOPLIN_CONFIG_JSON")
-ENV JOPLIN_CONFIG_JSON=/secrets/joplin-config.json
-VOLUME /secrets
 
 # Joplin config directory can be mounted for persistence of config and database
 RUN mkdir -p /home/node/.config/joplin && chown node:node /home/node/.config/joplin
@@ -60,4 +55,4 @@ EXPOSE 80/tcp
 
 # Test health of Joplin Clipper server with periodic GET /ping
 HEALTHCHECK --interval=30s --retries=1 --timeout=5s \
-      CMD curl -s http://localhost/ping | jq -R -e '. == "JoplinClipperServer"'
+     CMD curl -s http://localhost/ping | jq -R -e '. == "JoplinClipperServer"'

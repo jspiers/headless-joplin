@@ -9,12 +9,16 @@ services:
         JOPLIN_VERSION: ${JOPLIN_VERSION?}
     image: jspiers/headless-joplin:${JOPLIN_VERSION?}-node-${NODE_VERSION?}
     volumes:
-      - ./joplin-config.json:/secrets/joplin-config.json
       - type: volume
         source: joplin-data
         target: /home/node/.config/joplin
+    secrets:
+      - joplin-config.json
     ports:
       - 3000:80
     command: [joplin, server, start]
 volumes:
   joplin-data: {}
+secrets:
+  joplin-config.json:
+    file: ./joplin-config.json

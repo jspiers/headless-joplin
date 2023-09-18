@@ -3,8 +3,8 @@
 # Display Joplin version
 gosu node joplin version
 
-# Import Joplin configuration from JSON, if present in /secrets volume
-# readonly JOPLIN_CONFIG_JSON="/secrets/joplin-config.json"
+# Configure Joplin by importing a JSON configuration file from a mounted volume/secret, if present
+readonly JOPLIN_CONFIG_JSON=${JOPLIN_CONFIG_JSON:-/run/secrets/joplin-config.json}
 if [ -f $JOPLIN_CONFIG_JSON ]; then
     echo "Importing Joplin configuration from $JOPLIN_CONFIG_JSON"
     echo "  ... after forcing api.port=41184"
