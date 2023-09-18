@@ -5,8 +5,9 @@ ARG JOPLIN_VERSION=latest
 FROM node:${NODE_VERSION}-buster-slim as base
 FROM base as builder
 # Install build packages necessary to compile Joplin dependencies
+# trunk-ignore(hadolint/DL3008)
 RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install --no-upgrade -y \
+ && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-upgrade -y \
       git \
       python-minimal \
       build-essential \
@@ -26,6 +27,7 @@ COPY --from=builder --chown=node:node /home/node/.joplin-bin /home/node/.joplin-
 ENV PATH=$PATH:/home/node/.joplin-bin/bin
 
 # Install some utilities for the release image
+# trunk-ignore(hadolint/DL3008)
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-upgrade -y \
       tini \

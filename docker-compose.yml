@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.8"
 services:
   joplin:
     build:
@@ -14,7 +14,7 @@ services:
         source: joplin-data
         target: /home/node/.config/joplin
     ports:
-      - "3000:80"
-    command: ["joplin", "server", "start"]
+      - 3000:80
+    command: [joplin, server, start]
 volumes:
-  joplin-data:
+  joplin-data: {}
