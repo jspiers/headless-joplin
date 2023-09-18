@@ -16,7 +16,7 @@ services:
       - joplin-config.json
     ports:
       - 3000:80
-    command: [joplin, server, start]
+    command: [ joplin, server, start ]
 volumes:
   joplin-data: {}
 secrets:

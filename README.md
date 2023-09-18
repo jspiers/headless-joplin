@@ -20,7 +20,7 @@ docker run --rm -p 3000:80 -it headless-joplin bash
 ## Build Options:
 ### Set Node and/or Joplin versions
 ```
-docker build . -t headless-joplin --build-arg NODE_VERSION=15-buster-slim --build-arg JOPLIN_VERSION=2.3.2
+docker build . -t headless-joplin --build-arg NODE_VERSION=15 --build-arg JOPLIN_VERSION=2.3.2
 ```
 
 ## Run Options:
