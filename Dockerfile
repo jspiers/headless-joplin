@@ -44,6 +44,9 @@ RUN apt-get update \
 RUN mkdir -p /home/node/.config/joplin && chown node:node /home/node/.config/joplin
 VOLUME /home/node/.config/joplin
 
+# Use a volume for /var/log where "joplin sync" logs are written
+VOLUME /var/log
+
 # Set up entrypoint and working environment
 WORKDIR /home/node
 COPY --chown=node:node entrypoint.sh /entrypoint.sh
