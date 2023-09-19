@@ -27,6 +27,8 @@ docker build . -t headless-joplin --build-arg NODE_VERSION=15 --build-arg JOPLIN
 ### Joplin Config File
 Add a Joplin configuration JSON file (i.e. with the contents of a `joplin config --export` from another Joplin instance) to `./joplin-config.json` and it will be loaded via `joplin --import` in the docker container.
 
+See the [official Joplin terminal documentation](https://joplinapp.org/terminal/#commands) for possible key/value pairs.
+
 ```
 docker run --rm -p 3000:80 -v $(pwd)/joplin-config.json:/run/secrets/joplin-config.json headless-joplin
 ```
