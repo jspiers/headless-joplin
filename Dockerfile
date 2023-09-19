@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Build and install Joplin CLI into a first image
 # Set build arguments to specify particular versions of node and Joplin
 ARG NODE_VERSION=lts
@@ -57,5 +58,5 @@ CMD ["joplin", "server", "start"]
 EXPOSE 80/tcp
 
 # Test health of Joplin Clipper server with periodic GET /ping
-HEALTHCHECK --interval=30s --retries=1 --timeout=5s \
+HEALTHCHECK --interval=30s --retries=1 --timeout=5s --start-interval=5s --start-period=30s \
      CMD curl -s http://localhost/ping | jq -R -e '. == "JoplinClipperServer"'
