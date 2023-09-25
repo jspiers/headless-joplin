@@ -13,11 +13,12 @@ else
     echo "$JOPLIN_CONFIG_JSON does not exist; using default Joplin config"
 fi
 
+# Add cron job to run joplin sync every 5 minutes + extra random 0-3 minute delay
 # https://joplinapp.org/terminal/#synchronisation
 JOPLIN_SYNC_LOG="/var/log/joplin-sync.log"
 cat > /etc/cron.d/joplin-sync <<EOF
 PATH=$PATH
-*/5 * * * * node joplin sync >> $JOPLIN_SYNC_LOG 2>&1
+*/5 * * * * node (delay=\`shuf -i 0-3 -n 1\`; echo "\"joplin sync\" will begin in \${delay} minutes..."; sleep \${delay}m; joplin sync) >> $JOPLIN_SYNC_LOG 2>&1
 EOF
 touch $JOPLIN_SYNC_LOG
 chown node:node $JOPLIN_SYNC_LOG
