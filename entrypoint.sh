@@ -24,6 +24,15 @@ touch $JOPLIN_SYNC_LOG
 chown node:node $JOPLIN_SYNC_LOG
 echo "Periodic \"joplin sync\" cron job logs to $JOPLIN_SYNC_LOG"
 
+# Enable end-to-end encryption if JOPLIN_E2EE_MASTER_PASSWORD is set
+if [ ! -z "${JOPLIN_E2EE_MASTER_PASSWORD}" ]; then
+    echo "Enabling Joplin end-to-end encryption..."
+    joplin e2ee -p \'${JOPLIN_E2EE_MASTER_PASSWORD}\' enable
+else
+    echo "JOPLIN_E2EE_MASTER_PASSWORD is not set"
+fi
+joplin e2ee status
+
 # Forward external port 80 to Joplin server on 127.0.0.1:41184
 SOCAT_LOG="/var/log/socat.log"
 socat -d -d -lf $SOCAT_LOG TCP-LISTEN:80,fork TCP:127.0.0.1:41184 &
