@@ -1,2 +1,2 @@
-joplin-config.json
+joplin-config*.json
 *.local.env
