@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # Display Joplin version
 gosu node joplin version
