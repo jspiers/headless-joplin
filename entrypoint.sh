@@ -34,6 +34,8 @@ fi
 joplin e2ee status
 
 # Forward external port 80 to Joplin server on 127.0.0.1:41184
+# We need socat to allow external (0.0.0.0) access to hardcoded localhost port binding:
+# https://github.com/laurent22/joplin/blob/d22abe69b649f5909e85a9b72400978980f1f396/packages/lib/ClipperServer.ts#L231
 SOCAT_LOG="/var/log/socat.log"
 socat -d -d -lf $SOCAT_LOG TCP-LISTEN:80,fork TCP:127.0.0.1:41184 &
 cat <<EOF
