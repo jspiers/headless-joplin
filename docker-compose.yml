@@ -4,22 +4,19 @@ services:
     build:
       context: .
       args:
-        # these variables need to be set in your environment or in a .env file
+        # these variables need to be hard-coded here or set in a .env file
         NODE_VERSION: ${NODE_VERSION?}
         JOPLIN_VERSION: ${JOPLIN_VERSION?}
     image: jspiers/headless-joplin:${JOPLIN_VERSION?}-node-${NODE_VERSION?}
     volumes:
-      - type: volume
-        source: joplin-data
-        target: /home/node/.config/joplin
+      - joplin-data:/home/node/.config/joplin
     secrets:
       - joplin-config.json
     env_file:
       # Set JOPLIN_E2EE_MASTER_PASSWORD to non-empty value to enable encryption
       - joplin.env
     ports:
-      - 3000:80
-    command: [ joplin, server, start ]
+      - "3000:80"
 volumes:
   joplin-data: {}
 secrets:
