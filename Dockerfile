@@ -27,12 +27,14 @@ ENV PATH=$PATH:/home/node/.joplin-bin/bin
 RUN mkdir -p /home/node/.config/joplin && chown node:node /home/node/.config/joplin
 VOLUME /home/node/.config/joplin
 
+# Install s6-overlay to enable multiple services in same docker container
+# https://github.com/just-containers/s6-overlay
 FROM joplin as s6
 
 # Remove any third-party apt sources to avoid issues with expiring keys
 RUN rm -f /etc/apt/sources.list.d/*.list
 
-# For apt caching as per https://docs.docker.com/engine/reference/builder/#run---mounttypecache
+# For apt caching as per https://docs.docker.com/engine/reference/builder/#example-cache-apt-packages
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 # Install curl
