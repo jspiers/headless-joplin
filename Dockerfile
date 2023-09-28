@@ -77,56 +77,30 @@ foreground {
 joplin config --import-file "\${configjson}"
 EOF
 
-# During initial Joplin sync, set master password if env var is set
-ENV JOPLIN_E2EE_MASTER_PASSWORD=""
-RUN mkdir -p /etc/s6-overlay/s6-rc.d/joplin-initialsync
-RUN echo "oneshot" > /etc/s6-overlay/s6-rc.d/joplin-initialsync/type
-COPY <<EOF /etc/s6-overlay/s6-rc.d/joplin-initialsync/up
-if {
-    pipeline -w { sed "s/^/initial sync: /" }
-    fdmove -c 2 1
-    joplin sync
-}
-importas pw JOPLIN_E2EE_MASTER_PASSWORD
-pipeline -w { sed "s/^/e2ee: /" }
-ifelse { test -z "\${pw}" } {
-    echo Encryption disabled because JOPLIN_E2EE_MASTER_PASSWORD is blank or not set
-}
-foreground { echo "Setting master password from JOPLIN_E2EE_MASTER_PASSWORD" }
-if { joplin e2ee enable -p \${pw} }
-fdmove -c 2 1
-joplin e2ee decrypt
-EOF
-
 # Create joplin-sync as s6 longrun
 ENV JOPLIN_SYNC_INTERVAL=5m
 RUN mkdir -p /etc/s6-overlay/s6-rc.d/joplin-sync
 RUN echo "longrun" > /etc/s6-overlay/s6-rc.d/joplin-sync/type
 COPY <<EOF /etc/s6-overlay/s6-rc.d/joplin-sync/run
 #!/command/execlineb -P
-multisubstitute {
-    importas pw JOPLIN_E2EE_MASTER_PASSWORD
-    importas sleeptime JOPLIN_SYNC_INTERVAL
-}
-# loopwhilex -o 0
-# foreground {
-    backtick -E time { date +%T }
-    foreground { echo \${time}: Next joplin sync in \${sleeptime}... }
-    foreground { sleep \${sleeptime} }
-    if {
-        pipeline -w { sed "s/^/sync: /" }
-        fdmove -c 2 1
-        joplin sync
-    }
-    ifelse { test -z "\${pw}" } {
-        echo JOPLIN_E2EE_MASTER_PASSWORD is not set
-    }
-    pipeline -w { sed "s/^/e2ee: /" }
+importas sleeptime JOPLIN_SYNC_INTERVAL
+if {
+    pipeline -w { sed "s/^/sync: /" }
     fdmove -c 2 1
-    joplin e2ee decrypt
-# }
-# foreground { echo THIS SHOULD NOT EVER RUN }
-# exit 1
+    joplin sync
+}
+backtick -E encryption { joplin config encryption.enabled }
+foreground {
+    pipeline -w { sed "s/^/e2ee: /" }
+    ifelse { test \${encryption} = "encryption.enabled = true" } {
+        fdmove -c 2 1
+        joplin e2ee decrypt
+    }
+    echo Disabled
+}
+backtick -E time { date +%T }
+foreground { echo \${time}: Next joplin sync in \${sleeptime}... }
+sleep \${sleeptime}
 EOF
 
 # Run socat to expose joplin clipper api bound to localhost as s6 service
@@ -151,15 +125,10 @@ RUN touch /etc/s6-overlay/s6-rc.d/user/contents.d/joplin-config \
  && mkdir -p /etc/s6-overlay/s6-rc.d/joplin-config/dependencies.d/ \
  && touch /etc/s6-overlay/s6-rc.d/joplin-config/dependencies.d/base
 
-# Activate joplin-initialsync s6 oneshot
-RUN touch /etc/s6-overlay/s6-rc.d/user/contents.d/joplin-initialsync \
- && mkdir -p /etc/s6-overlay/s6-rc.d/joplin-initialsync/dependencies.d/ \
- && touch /etc/s6-overlay/s6-rc.d/joplin-initialsync/dependencies.d/joplin-config
-
 # Activate joplin-sync s6 service
 RUN touch /etc/s6-overlay/s6-rc.d/user/contents.d/joplin-sync \
  && mkdir -p /etc/s6-overlay/s6-rc.d/joplin-sync/dependencies.d/ \
- && touch /etc/s6-overlay/s6-rc.d/joplin-sync/dependencies.d/joplin-initialsync
+ && touch /etc/s6-overlay/s6-rc.d/joplin-sync/dependencies.d/joplin-config
 
 # Activate socat s6 service
 RUN touch /etc/s6-overlay/s6-rc.d/user/contents.d/socat \
@@ -169,6 +138,11 @@ RUN touch /etc/s6-overlay/s6-rc.d/user/contents.d/socat \
 # Increase the timeout (in milliseconds) waiting for s6 services to run/start (0 = infinity)
 # (see https://github.com/just-containers/s6-overlay/tree/v3.1.5.0#customizing-s6-overlay-behaviour)
 ENV S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0
+
+# Create volume for default Joplin sync target via "local" filesystem path
+# VOLUME [ "/sync" ]
+# RUN mkdir -p /sync && chown -R node:node /sync
+# COPY --chown=node:node joplin-config-defaults.json /home/node/joplin-config-defaults.json
 
 WORKDIR /home/node
 USER node

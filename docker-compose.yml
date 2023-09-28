@@ -12,9 +12,8 @@ services:
       - joplin-data:/home/node/.config/joplin
     secrets:
       - joplin-config.json
-    env_file:
-      # Set JOPLIN_E2EE_MASTER_PASSWORD to non-empty value to enable encryption
-      - joplin.env
+    environment:
+      JOPLIN_SYNC_INTERVAL: 30s
     ports:
       - "3000:80"
 volumes:
