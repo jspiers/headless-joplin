@@ -1,0 +1,28 @@
+#!/command/execlineb -P
+multisubstitute {
+    importas defaults JOPLIN_CONFIG_DEFAULTS_JSON
+    importas config JOPLIN_CONFIG_JSON
+}
+backtick -E sleeptime {
+    # Extract sync interval from JSON config files
+    # (see https://stackoverflow.com/a/71416016/5905029 for jq expression)
+    jq ". * input | .[\"sync.interval\"]" \${defaults} \${config}
+}
+backtick -E encryption { joplin config encryption.enabled }
+# TODO loop the remainder instead of dying and relying on s6 service restart
+foreground {
+    pipeline -w { sed "s/^/joplin sync: /" }
+    fdmove -c 2 1
+    joplin sync
+}
+foreground {
+    pipeline -w { sed "s/^/joplin e2ee decrypt: /" }
+    ifelse { test \${encryption} = "encryption.enabled = true" } {
+        fdmove -c 2 1
+        joplin e2ee decrypt
+    }
+    echo "Disabled"
+}
+backtick -E time { date +%T }
+foreground { echo \${time}: Next sync in \${sleeptime}s... }
+sleep \${sleeptime}
