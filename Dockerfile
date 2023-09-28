@@ -62,34 +62,58 @@ FROM s6 as release
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get --no-install-recommends install -y \
-        socat
+        socat \
+        jq
+
+# Create volume for default Joplin sync target via "local" filesystem path
+VOLUME [ "/sync" ]
+RUN mkdir -p /sync && chown -R node:node /sync
 
 # Load Joplin config using s6 oneshot
+ARG JOPLIN_CONFIG_DEFAULTS_JSON=/home/node/joplin-config-defaults.json
 ENV JOPLIN_CONFIG_JSON=/run/secrets/joplin-config.json
+ARG JOPLIN_CONFIG_REQUIRED_JSON=/home/node/joplin-config-required.json
+COPY --chown=node:node joplin-config-defaults.json ${JOPLIN_CONFIG_DEFAULTS_JSON}
+COPY --chown=node:node joplin-config-required.json ${JOPLIN_CONFIG_REQUIRED_JSON}
 RUN mkdir -p /etc/s6-overlay/s6-rc.d/joplin-config
 RUN echo "oneshot" > /etc/s6-overlay/s6-rc.d/joplin-config/type
 COPY <<EOF /etc/s6-overlay/s6-rc.d/joplin-config/up
-importas configjson JOPLIN_CONFIG_JSON
 foreground {
     pipeline -w { sed "s/^/version: /" }
     joplin version
 }
-joplin config --import-file "\${configjson}"
+multisubstitute {
+    define defaults ${JOPLIN_CONFIG_DEFAULTS_JSON}
+    importas config JOPLIN_CONFIG_JSON
+    define required ${JOPLIN_CONFIG_REQUIRED_JSON}
+}
+# Merge JSON files by order of precedence and feed result to "joplin config --import"
+# (see https://stackoverflow.com/a/71416016/5905029 for jq expression)
+pipeline { jq "reduce inputs as \$i (.; . * \$i)" \${defaults} \${config} \${required} }
+joplin config --import
 EOF
 
 # Create joplin-sync as s6 longrun
-ENV JOPLIN_SYNC_INTERVAL=5m
 RUN mkdir -p /etc/s6-overlay/s6-rc.d/joplin-sync
 RUN echo "longrun" > /etc/s6-overlay/s6-rc.d/joplin-sync/type
 COPY <<EOF /etc/s6-overlay/s6-rc.d/joplin-sync/run
 #!/command/execlineb -P
-importas sleeptime JOPLIN_SYNC_INTERVAL
+multisubstitute {
+    define defaults ${JOPLIN_CONFIG_DEFAULTS_JSON}
+    importas config JOPLIN_CONFIG_JSON
+}
+backtick -E sleeptime {
+    # Extract sync interval from JSON config files
+    # (see https://stackoverflow.com/a/71416016/5905029 for jq expression)
+    jq ". * input | .[\\"sync.interval\\"]" \${defaults} \${config}
+}
+backtick -E encryption { joplin config encryption.enabled }
+# TODO loop the remainder instead of dying and relying on s6 service restart
 if {
     pipeline -w { sed "s/^/sync: /" }
     fdmove -c 2 1
     joplin sync
 }
-backtick -E encryption { joplin config encryption.enabled }
 foreground {
     pipeline -w { sed "s/^/e2ee: /" }
     ifelse { test \${encryption} = "encryption.enabled = true" } {
@@ -99,7 +123,7 @@ foreground {
     echo Disabled
 }
 backtick -E time { date +%T }
-foreground { echo \${time}: Next joplin sync in \${sleeptime}... }
+foreground { echo \${time}: Next sync in \${sleeptime}s... }
 sleep \${sleeptime}
 EOF
 
@@ -138,11 +162,6 @@ RUN touch /etc/s6-overlay/s6-rc.d/user/contents.d/socat \
 # Increase the timeout (in milliseconds) waiting for s6 services to run/start (0 = infinity)
 # (see https://github.com/just-containers/s6-overlay/tree/v3.1.5.0#customizing-s6-overlay-behaviour)
 ENV S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0
-
-# Create volume for default Joplin sync target via "local" filesystem path
-# VOLUME [ "/sync" ]
-# RUN mkdir -p /sync && chown -R node:node /sync
-# COPY --chown=node:node joplin-config-defaults.json /home/node/joplin-config-defaults.json
 
 WORKDIR /home/node
 USER node

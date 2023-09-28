@@ -4,7 +4,7 @@ services:
     build:
       context: .
       args:
-        # these variables need to be hard-coded here or set in a .env file
+        # these variables must be provided here or set in a .env file
         NODE_VERSION: ${NODE_VERSION?}
         JOPLIN_VERSION: ${JOPLIN_VERSION?}
     image: jspiers/headless-joplin:${JOPLIN_VERSION?}-node-${NODE_VERSION?}
@@ -12,8 +12,6 @@ services:
       - joplin-data:/home/node/.config/joplin
     secrets:
       - joplin-config.json
-    environment:
-      JOPLIN_SYNC_INTERVAL: 30s
     ports:
       - "3000:80"
 volumes:
