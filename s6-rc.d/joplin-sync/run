@@ -8,6 +8,10 @@ backtick -E sleeptime {
     # (see https://stackoverflow.com/a/71416016/5905029 for jq expression)
     jq ". * input | .[\"sync.interval\"]" \${defaults} \${config}
 }
+ifelse { test \${sleeptime} -eq 0 } {
+    foreground { echo "joplin sync: Disabled because \"sync.interval\" = 0" }
+    sleep infinity
+}
 backtick -E encryption { joplin config encryption.enabled }
 # TODO loop the remainder instead of dying and relying on s6 service restart
 foreground {
