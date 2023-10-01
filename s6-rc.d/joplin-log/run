@@ -1,0 +1,6 @@
+#!/command/execlineb -P
+
+foreground { mkdir -p /home/node/.config/joplin/ }
+foreground { touch /home/node/.config/joplin/log.txt }
+pipeline -w { sed "s/^/joplin-log: /" }
+tail -F /home/node/.config/joplin/log.txt
