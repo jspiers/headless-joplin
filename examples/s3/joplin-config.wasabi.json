@@ -4,5 +4,5 @@
     "sync.8.region": "us-east-1",
     "sync.8.path": "my-bucket",
     "sync.8.password": "my-s3-access-key",
-    "sync.8.username": "my-s3-secret-key",
+    "sync.8.username": "my-s3-secret-key"
 }
