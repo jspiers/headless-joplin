@@ -9,12 +9,13 @@ ARG JOPLIN_VERSION=latest
 FROM node:${NODE_VERSION}-bookworm-slim as base
 
 FROM base as builder
+ARG JOPLIN_VERSION
 
 # Install Joplin as user "node"
 USER node
 ENV NODE_ENV=production
 ENV NPM_CONFIG_PREFIX=/home/node/.joplin-bin
-RUN npm -g --omit=dev install "joplin@${JOPLIN_VERSION}"
+RUN npm -g install "joplin@${JOPLIN_VERSION?}"
 
 # Start again from a clean base image devoid of all the build packages
 FROM base as joplin
