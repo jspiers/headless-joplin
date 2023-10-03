@@ -1,0 +1,10 @@
+{
+    "sync.target": 8,
+    "sync.8.url": "https://s3.us-east-1.wasabisys.com",
+    "sync.8.region": "us-east-1",
+    "sync.8.path": "my-bucket",
+    "sync.8.password": "my-s3-access-key",
+    "sync.8.username": "my-s3-secret-key",
+    "encryption.enabled": true,
+    "encryption.masterPassword": "my-joplin-encryption-master-password"
+}

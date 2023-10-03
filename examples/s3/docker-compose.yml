@@ -1,0 +1,31 @@
+version: "3.8"
+
+name: headless-joplin-example
+
+services:
+  joplin:
+    # Set JOPLIN_VERSION and NODE_VERSION in a .env file or hard code them here
+    image: jspiers/headless-joplin:2.12.1-node-18.18.0
+
+    # Volume for persistence of Joplin's data
+    volumes:
+      - joplin-data:/home/node/.config/joplin
+
+    # Optional config to override defaults
+    secrets:
+      - joplin-config.json
+
+    # Make container's Joplin Clipper Server available on localhost port 3000 (optional)
+    ports:
+      - "3000:80"
+
+    # Output joplin/log.txt file to docker compose log (optional)
+    environment:
+      JOPLIN_LOG_ENABLED: "true"
+
+volumes:
+  joplin-data: {}
+
+secrets:
+  joplin-config.json:
+    file: ./joplin-config.wasabi.json

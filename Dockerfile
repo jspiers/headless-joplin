@@ -72,30 +72,34 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         jq \
         vim-tiny
 
+# Set s6-overlay options (see https://github.com/just-containers/s6-overlay/tree/v3.1.5.0#customizing-s6-overlay-behaviour)
 # Make environment variables visible to s6 scripts
 ENV S6_KEEP_ENV=1
-
 # Increase the timeout (in milliseconds) waiting for s6 services to run/start (0 = infinity)
-# (see https://github.com/just-containers/s6-overlay/tree/v3.1.5.0#customizing-s6-overlay-behaviour)
 ENV S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0
 
 # Copy s6-rc files
 COPY s6-rc.d /etc/s6-overlay/s6-rc.d
 
-# Copy additional files needed by s6 scripts
-ENV JOPLIN_CONFIG_DEFAULTS_JSON=/home/node/joplin-config-defaults.json
-ENV JOPLIN_CONFIG_JSON=/run/secrets/joplin-config.json
-ENV JOPLIN_CONFIG_REQUIRED_JSON=/home/node/joplin-config-required.json
-COPY --chown=node:node joplin-config-defaults.json /home/node/joplin-config-defaults.json
-COPY --chown=node:node joplin-config-required.json /home/node/joplin-config-required.json
+# This variable is used to enable/disable the joplin-log service (see ./s6-rc.d/joplin-log/run)
+ENV JOPLIN_LOG_ENABLED="false"
 
 # Create volume for default Joplin sync target via "local" filesystem path
 VOLUME [ "/sync" ]
 RUN mkdir -p /sync && chown -R node:node /sync
 
-# Run as node
+# Run as user "node"
 WORKDIR /home/node
 USER node
+
+# Copy additional files needed by joplin-config s6 script (see ./s6-rc.d/joplin-config/up)
+ENV JOPLIN_CONFIG_DEFAULTS_JSON=/home/node/joplin-config-defaults.json
+ENV JOPLIN_CONFIG_JSON=/run/secrets/joplin-config.json
+ENV JOPLIN_CONFIG_REQUIRED_JSON=/home/node/joplin-config-required.json
+COPY joplin-config-defaults.json ./joplin-config-defaults.json
+COPY joplin-config-required.json ./joplin-config-required.json
+
+# Run joplin server as daemon
 CMD ["joplin", "server", "start"]
 
 # Expose socat external port being forwarded to Joplin clipper server

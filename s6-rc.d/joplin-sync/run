@@ -5,8 +5,11 @@ multisubstitute {
 }
 backtick -E sleeptime {
     # Extract sync interval from JSON config files
-    # (see https://stackoverflow.com/a/71416016/5905029 for jq expression)
-    jq ". * input | .[\"sync.interval\"]" \${defaults} \${config}
+    ifelse { test -e \${config} } {
+        # (see https://stackoverflow.com/a/71416016/5905029 for jq expression)
+        jq ". * input | .[\"sync.interval\"]" \${defaults} \${config}
+    }
+    jq ".[\"sync.interval\"]" \${defaults}
 }
 ifelse { test \${sleeptime} -eq 0 } {
     foreground { echo "joplin sync: Disabled because \"sync.interval\" = 0" }
