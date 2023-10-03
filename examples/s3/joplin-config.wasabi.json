@@ -5,6 +5,4 @@
     "sync.8.path": "my-bucket",
     "sync.8.password": "my-s3-access-key",
     "sync.8.username": "my-s3-secret-key",
-    "encryption.enabled": true,
-    "encryption.masterPassword": "my-joplin-encryption-master-password"
 }
