@@ -50,18 +50,42 @@ Node versions are those of the official `node` Docker images on [Docker Hub](htt
 Set `JOPLIN_LOG_ENABLED=true` to have the contents of Joplin's log file (`log.txt`) included in Docker's output in real time.
 
 ### Joplin Config File
-Add a Joplin configuration JSON file (i.e. with the contents of a `joplin config --export` from another Joplin instance) to `./joplin-config.json` and it will be loaded via `joplin --import` in the docker container.
+
+The Joplin terminal client includes commands for importing and exporting its settings in JSON format:
+```
+$ joplin config --export > json-config.json
+```
+And then in another joplin instance:
+```
+$ joplin config --import-file json-config.json
+```
+
+See the [official Joplin terminal documentation](https://joplinapp.org/terminal/#commands) for supported JSON key/value pairs.
+
+**Note:** there are also several unofficial key/value pairs, which can be exported/observed by adding the '-v' flag to the export command: `joplin config --export -v`. For example, the encryption master password can be set via `encryption.masterPassword`.
+
+In particular, the `api.token` should be specified to override the default value for the sake of [security](#security-considerations).
+
+### How `headless-joplin` Configures Joplin
+`headless-joplin` leverages the Joplin terminal client's JSON configuration functionality to configure Joplin via three files:
+1. [default settings](joplin-config-defaults.json) suitable for most envisioned scenarios;
+2. an optional JSON configuration file which can either be provided as a Docker secret with the name `json-config.json`, or equivalently, by mounting a JSON file at a location specified via the `JOPLIN_CONFIG_JSON` environment variable, which defaults to `/run/secrets/joplin-config.json`; and
+3. [required settings](joplin-config-required.json) expected by `headless-joplin` for its correct operation.
+
+#### Special note regarding `sync.interval`
+
+When running in server mode, the Joplin terminal client does not perform any synchronization of its own, even if the `sync.interval` is set to a non-zero value. To account for this, the `headless-joplin` container is designed to read the `sync.interval` value from either the defaults or the user-provided JSON config file, and periodically invoke the `joplin sync` command as a background process.
 
 ```
 $ docker run --rm -p 3000:80 -v ${PWD}/joplin-config.json:/run/secrets/joplin-config.json headless-joplin
 ```
 
-See the [official Joplin terminal documentation](https://joplinapp.org/terminal/#commands) for possible key/value pairs. **Note:** there are also several unofficial key/value pairs, which can be exported/observed by adding the '-v' flag to the export command: `joplin config --export -v`. For example, the encryption master password can be set via `encryption.masterPassword`.
 
-#### Default Configuration
-This Docker container includes a hard-coded set of default configurations in the [joplin-config-defaults.json](joplin-config-defaults.json) file.
+#### Configuration Examples
 
-Sample `joplin-config.json` for S3-based sync:
+Sample `joplin-config.json` for various scenarios are provided in the [examples](examples) directory. 
+
+S3-based sync:
 ```json
 {
   "sync.target": 8,
@@ -93,3 +117,8 @@ $ docker compose build
 
 ### Deployment Examples
 See the [examples](examples) subdirectory for `docker-compose.yml` files suitable for a few scenarios.
+
+## Security Considerations
+- HTTP not HTTPS
+- should only use docker internal network
+- else reverse-proxy with NGINX or traefik
