@@ -10,9 +10,9 @@ Synchronization, encryption, and other Joplin parameters may be configured by mo
 
 Try out one of the tagged images from the [container registry]:
 ```
-docker run --rm -d -p 3000:80 --name my_joplin_container jspiers/headless-joplin:2.12.1-node-18.18.0
+docker run --rm -p 3000:80 --name my_joplin_container jspiers/headless-joplin:2.12.1-node-18.18.0
 ```
-Then check that the Joplin Clipper server (*i.e.* [Data API]) is running from your host's command-line:
+Then, in another terminal, check that the Joplin Clipper server (*i.e.* [Data API]) is running from your host's command-line:
 ```
 curl http://localhost:3000/ping
 ```
@@ -23,17 +23,12 @@ You can also open the [Joplin terminal client] running on the container to inter
 docker exec -it my_joplin_container joplin
 ```
 
-When done, stop the container:
-```
-docker stop my_joplin_container
-```
-
-Because we specified the `--rm` option when invoking `docker run` above, the container is automatically deleted.
+When done, stop the container by typing *Ctrl-C*. Because we specified the `--rm` option when invoking `docker run` above, the container is automatically deleted.
 
 ## Persistent Joplin Data
 To persist Joplin data between runs of the Docker container, mount a volume at `/home/node/.config/joplin`:
 ```
-docker run --rm -d -p 3000:80 --name my_joplin_container -v joplin-data:/home/node/.config/joplin jspiers/headless-joplin:2.12.1-node-18.18.0
+docker run --rm -p 3000:80 --name my_joplin_container -v joplin-data:/home/node/.config/joplin jspiers/headless-joplin:2.12.1-node-18.18.0
 ```
 
 ## Configuration:
@@ -64,7 +59,7 @@ For example, to load a `joplin-config.json` file from your current directory:
 [^2]: Special note regarding `sync.interval`: When running in server mode, the Joplin terminal client does not (as of Joplin version 2.12.1) perform any synchronization of its own, even if the `sync.interval` is set to a non-zero value. To account for this, the `headless-joplin` container is designed to read the `sync.interval` value from either the defaults or the user-provided JSON config file, and periodically invoke the `joplin sync` command as a background process.
 
 ```
-docker run --rm -d -p 3000:80 --name my_joplin_container -v ${PWD}/joplin-config.json:/run/secrets/joplin-config.json jspiers/headless-joplin:2.12.1-node-18.18.0
+docker run --rm -p 3000:80 --name my_joplin_container -v ${PWD}/joplin-config.json:/run/secrets/joplin-config.json jspiers/headless-joplin:2.12.1-node-18.18.0
 ```
 
 In particular, consider specifying `api.token` override the default value for the sake of [security](#security-considerations).
@@ -80,7 +75,7 @@ See the [examples] subdirectory for `docker-compose.yml` files suitable for a fe
 If you clone the repo, you can also build the Docker image yourself:
 ```
 docker build . -t headless-joplin
-docker run --rm -p 3000:80 -it headless-joplin bash
+docker run --rm -p 3000:80 headless-joplin
 ```
 
 ### Set Joplin and/or Node versions
