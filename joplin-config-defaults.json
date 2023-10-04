@@ -1,10 +1,8 @@
 {
-    "sync.target": 2,
-    "sync.2.path": "/sync",
+    "api.token": "mytoken",
+    "editor": "vi",
     "sync.interval": 0,
     "sync.maxConcurrentConnections": 5,
     "sync.resourceDownloadMode": "manual",
-    "sync.wipeOutFailSafe": true,
-    "api.token": "mytoken",
-    "editor": "vi"
+    "sync.wipeOutFailSafe": true
 }
