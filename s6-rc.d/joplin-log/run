@@ -4,7 +4,7 @@ importas logging JOPLIN_LOG_ENABLED
 ifelse { test \${logging} = "true" } {
     foreground { mkdir -p /home/node/.config/joplin/ }
     foreground { touch /home/node/.config/joplin/log.txt }
-    pipeline -w { sed "s/^/joplin-log: /" }
+    pipeline -w { sed -u "s/^/joplin-log: /" }
     tail -f /home/node/.config/joplin/log.txt
 }
 foreground { echo "joplin-log: Disabled because JOPLIN_LOG_ENABLED != \"true\"" }

@@ -18,12 +18,12 @@ ifelse { test \${sleeptime} -eq 0 } {
 backtick -E encryption { joplin config encryption.enabled }
 # TODO loop the remainder instead of dying and relying on s6 service restart
 foreground {
-    pipeline -w { sed "s/^/joplin sync: /" }
+    pipeline -w { sed -u "s/^/joplin sync: /" }
     fdmove -c 2 1
     joplin sync
 }
 foreground {
-    pipeline -w { sed "s/^/joplin e2ee decrypt: /" }
+    pipeline -w { sed -u "s/^/joplin e2ee decrypt: /" }
     ifelse { test \${encryption} = "encryption.enabled = true" } {
         fdmove -c 2 1
         joplin e2ee decrypt

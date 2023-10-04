@@ -5,7 +5,7 @@
 # We need socat to allow external (0.0.0.0) access to hardcoded localhost port binding:
 # https://github.com/laurent22/joplin/blob/d22abe69b649f5909e85a9b72400978980f1f396/packages/lib/ClipperServer.ts#L231
 
-pipeline -w { sed "s/^/socat: /" }
+pipeline -w { sed -u "s/^/socat: /" }
 foreground { echo "forwarding TCP port 0.0.0.0:80 => 127.0.0.1:41184" }
 fdmove -c 2 1
 socat -d -ls TCP-LISTEN:80,fork TCP:127.0.0.1:41184

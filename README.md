@@ -36,6 +36,10 @@ docker run --rm -p 3000:80 --name my_joplin_container -v joplin-data:/home/node/
 ### Environment Variables
 Set `JOPLIN_LOG_ENABLED=true` to tell the container to display the contents of Joplin's log file (`log.txt`) in the Docker logs in real time.
 
+```
+docker run --rm -p 3000:80 --name my_joplin_container -e JOPLIN_LOG_ENABLED=true jspiers/headless-joplin:2.12.1-node-18.18.0
+```
+
 ### Joplin JSON Config File
 
 The [Joplin terminal client] includes commands for importing and exporting its settings in JSON format:
@@ -49,7 +53,7 @@ joplin config --import-file json-config.json
 
 See the [official Joplin terminal documentation](https://joplinapp.org/terminal/#commands) for supported JSON key/value pairs. **Note:** there are also several unofficial configuration keys, which can be exported/observed by adding the '-v' flag to the export command: `joplin config --export -v`. For example, the encryption master password can be set via `encryption.masterPassword`.
 
-### How `headless-joplin` Configures Joplin
+#### How `headless-joplin` Configures Joplin
 `headless-joplin` leverages the Joplin terminal client's JSON configuration functionality to configure Joplin via three files:
 1. [default settings](joplin-config-defaults.json) suitable for most envisioned scenarios;
 2. an optional JSON configuration file which can either be provided as a Docker secret with the name `json-config.json`, or equivalently, by mounting a JSON file at a location specified via the `JOPLIN_CONFIG_JSON` environment variable, which defaults to `/run/secrets/joplin-config.json`; and

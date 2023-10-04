@@ -1,10 +1,10 @@
 foreground {
-    pipeline -w { sed "s/^/joplin version: /" }
+    pipeline -w { sed -u "s/^/joplin version: /" }
     fdmove -c 2 1
     joplin version
 }
 # Apply the JSON joplin config files in order
-pipeline -w { sed "s/^/joplin config: /" }
+pipeline -w { sed -u "s/^/joplin config: /" }
 forx -E JSON_FILE {
     JOPLIN_CONFIG_DEFAULTS_JSON
     JOPLIN_CONFIG_JSON
