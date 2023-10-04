@@ -2,7 +2,7 @@
 
 A Docker which runs the [Joplin terminal client] as a daemon with its web clipper service exposed on port 80.[^1]
 
-[^1]: Because the [Joplin terminal client] Clipper Server is [hard-coded](https://github.com/laurent22/joplin/blob/3a8aea1aa43d16d863aa0ecd6603570a429c625a/packages/lib/ClipperServer.js#L214) to bind to localhost `127.0.0.1`, the `headless-joplin` container includes a background [socat] service which redirects to that localhost port from the container's external port `0.0.0.0:80`
+[^1]: Because the [Joplin terminal client] Clipper Server is [hard-coded](https://github.com/laurent22/joplin/blob/a58d1d040cfdb0c9898e02b7c96ea9abff13270b/packages/lib/ClipperServer.ts#L231) to bind to localhost `127.0.0.1`, the `headless-joplin` container includes a background [socat] service which redirects to that localhost port from the container's external port `0.0.0.0:80`
 
 Synchronization, encryption, and other Joplin parameters may be configured by mounting a [JSON config file] to `/run/secrets/joplin-config.json` or equivalently by creating a secret named `joplin-config.json` in a `docker-compose.yml` file.
 
