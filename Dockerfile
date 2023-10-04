@@ -100,6 +100,11 @@ ENV JOPLIN_CONFIG_REQUIRED_JSON=/home/node/joplin-config-required.json
 COPY joplin-config-defaults.json ./joplin-config-defaults.json
 COPY joplin-config-required.json ./joplin-config-required.json
 
+# Fix tty issues in vim
+COPY <<EOF ./.vimrc
+set nocompatible
+EOF
+
 # Run joplin server as daemon
 CMD ["joplin", "server", "start"]
 
