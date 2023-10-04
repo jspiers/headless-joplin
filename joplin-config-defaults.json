@@ -1,7 +1,7 @@
 {
     "sync.target": 2,
     "sync.2.path": "/sync",
-    "sync.interval": 300,
+    "sync.interval": 0,
     "sync.maxConcurrentConnections": 5,
     "sync.resourceDownloadMode": "manual",
     "sync.wipeOutFailSafe": true,
