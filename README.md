@@ -1,6 +1,6 @@
 # headless-joplin
 
-A Docker which runs the [Joplin terminal client] as a daemon with its web clipper service exposed on port 80.[^1]
+A Docker container which runs the [Joplin terminal client] as a daemon with its web clipper service exposed on port 80.[^1]
 
 [^1]: Because the [Joplin terminal client] Clipper Server is [hard-coded](https://github.com/laurent22/joplin/blob/a58d1d040cfdb0c9898e02b7c96ea9abff13270b/packages/lib/ClipperServer.ts#L231) to bind to localhost `127.0.0.1`, the `headless-joplin` container includes a background [socat] service which redirects to that localhost port from the container's external port `0.0.0.0:80`
 
