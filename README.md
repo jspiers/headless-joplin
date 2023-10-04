@@ -28,23 +28,13 @@ $ docker stop my_joplin_container
 
 Because we specified the `--rm` option when invoking `docker run` above, the container is automatically deleted.
 
-## Build Options:
-
-If you clone the repo, you can also build the Docker image yourself:
+## Persistent Joplin Data
+To persist Joplin data between runs of the Docker container, mount a volume at `/home/node/.config/joplin`:
 ```
-$ docker build . -t headless-joplin
-$ docker run --rm -p 3000:80 -it headless-joplin bash
+$ docker run --rm -d -p 3000:80 --name my_joplin_container -v joplin-data:/home/node/.config/joplin jspiers/headless-joplin:2.12.1-node-18.18.0
 ```
 
-### Set Joplin and/or Node versions
-```
-$ docker build . -t headless-joplin --build-arg JOPLIN_VERSION=2.3.2 --build-arg NODE_VERSION=16
-```
-Suitable [Joplin versions](https://www.npmjs.com/package/joplin?activeTab=versions) are those of the `joplin` [NPM package](https://www.npmjs.com/package/joplin).
-
-Node versions are those of the official `node` Docker images on [Docker Hub](https://hub.docker.com/_/node/tags).
-
-## Run Options:
+## Configuration:
 
 ### Environment Variables
 Set `JOPLIN_LOG_ENABLED=true` to have the contents of Joplin's log file (`log.txt`) included in Docker's output in real time.
@@ -60,47 +50,26 @@ And then in another joplin instance:
 $ joplin config --import-file json-config.json
 ```
 
-See the [official Joplin terminal documentation](https://joplinapp.org/terminal/#commands) for supported JSON key/value pairs.
-
-**Note:** there are also several unofficial key/value pairs, which can be exported/observed by adding the '-v' flag to the export command: `joplin config --export -v`. For example, the encryption master password can be set via `encryption.masterPassword`.
-
-In particular, the `api.token` should be specified to override the default value for the sake of [security](#security-considerations).
+See the [official Joplin terminal documentation](https://joplinapp.org/terminal/#commands) for supported JSON key/value pairs. **Note:** there are also several unofficial configuration keys, which can be exported/observed by adding the '-v' flag to the export command: `joplin config --export -v`. For example, the encryption master password can be set via `encryption.masterPassword`.
 
 ### How `headless-joplin` Configures Joplin
 `headless-joplin` leverages the Joplin terminal client's JSON configuration functionality to configure Joplin via three files:
 1. [default settings](joplin-config-defaults.json) suitable for most envisioned scenarios;
 2. an optional JSON configuration file which can either be provided as a Docker secret with the name `json-config.json`, or equivalently, by mounting a JSON file at a location specified via the `JOPLIN_CONFIG_JSON` environment variable, which defaults to `/run/secrets/joplin-config.json`; and
-3. [required settings](joplin-config-required.json) expected by `headless-joplin` for its correct operation.
+3. [required settings](joplin-config-required.json) expected by `headless-joplin` for its correct operation[^1].
 
-#### Special note regarding `sync.interval`
-
-When running in server mode, the Joplin terminal client does not perform any synchronization of its own, even if the `sync.interval` is set to a non-zero value. To account for this, the `headless-joplin` container is designed to read the `sync.interval` value from either the defaults or the user-provided JSON config file, and periodically invoke the `joplin sync` command as a background process.
+[^1]: Special note regarding `sync.interval`: When running in server mode, the Joplin terminal client does not (as of Joplin version 2.12.1) perform any synchronization of its own, even if the `sync.interval` is set to a non-zero value. To account for this, the `headless-joplin` container is designed to read the `sync.interval` value from either the defaults or the user-provided JSON config file, and periodically invoke the `joplin sync` command as a background process.
 
 ```
-$ docker run --rm -p 3000:80 -v ${PWD}/joplin-config.json:/run/secrets/joplin-config.json headless-joplin
+$ docker run --rm -d -p 3000:80 --name my_joplin_container -v ${PWD}/joplin-config.json:/run/secrets/joplin-config.json jspiers/headless-joplin:2.12.1-node-18.18.0
 ```
 
+In particular, the `api.token` should be specified to override the default value for the sake of [security](#security-considerations).
 
 #### Configuration Examples
 
 Sample `joplin-config.json` for various scenarios are provided in the [examples](examples) directory. 
 
-S3-based sync:
-```json
-{
-  "sync.target": 8,
-  "sync.8.url": "https://s3.us-east-1.wasabisys.com",
-  "sync.8.path": "bucket",
-  "sync.8.username": "S3ACCESSKEY",
-  "sync.8.password": "S3SECRET",
-  "api.token": "mysupersecrettoken123"
-}
-```
-
-## Persistent Joplin Volume
-```
-$ docker run --rm -p 3000:80 -v ${PWD}/joplin-config.json:/run/secrets/joplin-config.json -v joplin-data:/home/node/.config/joplin headless-joplin
-```
 
 ## Interactive bash shell (instead of starting Joplin Clipper server)
 ```
@@ -122,3 +91,19 @@ See the [examples](examples) subdirectory for `docker-compose.yml` files suitabl
 - HTTP not HTTPS
 - should only use docker internal network
 - else reverse-proxy with NGINX or traefik
+
+## Build Options:
+
+If you clone the repo, you can also build the Docker image yourself:
+```
+$ docker build . -t headless-joplin
+$ docker run --rm -p 3000:80 -it headless-joplin bash
+```
+
+### Set Joplin and/or Node versions
+```
+$ docker build . -t headless-joplin --build-arg JOPLIN_VERSION=2.3.2 --build-arg NODE_VERSION=16
+```
+Suitable [Joplin versions](https://www.npmjs.com/package/joplin?activeTab=versions) are those of the `joplin` [NPM package](https://www.npmjs.com/package/joplin).
+
+Node versions are those of the official `node` Docker images on [Docker Hub](https://hub.docker.com/_/node/tags).
