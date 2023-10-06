@@ -1,5 +1,6 @@
 {
     "api.token": "mysupersecretjoplinapitoken",
+    "sync.interval": 120,
     "sync.target": 8,
     "sync.8.url": "https://s3.us-east-1.wasabisys.com",
     "sync.8.path": "bucket",
