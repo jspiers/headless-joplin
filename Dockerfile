@@ -52,6 +52,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get --no-install-recommends install -y \
         xz-utils
+
 # Check https://github.com/just-containers/s6-overlay/releases/ to find s6-overlay versions
 ARG S6_OVERLAY_VERSION=3.1.5.0
 RUN curl -sLO https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz \
@@ -93,14 +94,35 @@ RUN mkdir -p /sync && chown -R node:node /sync
 WORKDIR /home/node
 USER node
 
-# Copy additional files needed by joplin-config s6 script (see ./s6-rc.d/joplin-config/up)
+# Set default Joplin JSON config, imported by joplin-config s6 script (see ./s6-rc.d/joplin-config/up)
 ENV JOPLIN_CONFIG_DEFAULTS_JSON=/home/node/joplin-config-defaults.json
-ENV JOPLIN_CONFIG_JSON=/run/secrets/joplin-config.json
-ENV JOPLIN_CONFIG_REQUIRED_JSON=/home/node/joplin-config-required.json
-COPY joplin-config-defaults.json ./joplin-config-defaults.json
-COPY joplin-config-required.json ./joplin-config-required.json
+COPY <<EOF ./joplin-config-defaults.json
+{
+    "api.token": "mytoken",
+    "editor": "vi",
+    "sync.interval": 0,
+    "sync.maxConcurrentConnections": 5,
+    "sync.resourceDownloadMode": "manual",
+    "sync.wipeOutFailSafe": true
+}
+EOF
 
-# Fix tty issues in vim
+# Set optional Joplin JSON config to empty dictionary
+ENV JOPLIN_CONFIG_JSON=/run/secrets/joplin-config.json
+COPY <<EOF /run/secrets/joplin-config.json
+{}
+EOF
+
+# Set required Joplin JSON config overrides
+ENV JOPLIN_CONFIG_REQUIRED_JSON=/home/node/joplin-config-required.json
+COPY <<EOF ./joplin-config-required.json
+{
+    "api.port": 41184,
+    "sync.interval": 0
+}
+EOF
+
+# Fix tty issues in vim with "set nocompatible"
 COPY <<EOF ./.vimrc
 set nocompatible
 EOF

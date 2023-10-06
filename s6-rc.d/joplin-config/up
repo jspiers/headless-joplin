@@ -3,15 +3,16 @@ foreground {
     fdmove -c 2 1
     joplin version
 }
-# Apply the JSON joplin config files in order
-pipeline -w { sed -u "s/^/joplin config: /" }
-forx -E JSON_FILE {
-    JOPLIN_CONFIG_DEFAULTS_JSON
-    JOPLIN_CONFIG_JSON
-    JOPLIN_CONFIG_REQUIRED_JSON
+# Merge JSON files in order of precedence and feed result to "joplin config --import"
+# (see https://stackoverflow.com/a/71416016/5905029 for jq expression)
+multisubstitute {
+    importas defaults JOPLIN_CONFIG_DEFAULTS_JSON
+    importas config JOPLIN_CONFIG_JSON
+    importas required JOPLIN_CONFIG_REQUIRED_JSON
 }
-importas json_file $\{JSON_FILE}
-if { test -e $\{json_file} }
-foreground { echo importing $\{json_file} }
-fdmove -c 2 1
-joplin config --import-file $\{json_file}
+pipeline { jq "reduce inputs as \$i (.; . * \$i)" \${defaults} \${config} \${required} }
+pipeline {
+    fdmove -c 2 1
+    joplin config --import
+}
+sed -u "s/^/joplin config: /"
