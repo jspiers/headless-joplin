@@ -65,6 +65,7 @@ RUN curl -sLO https://github.com/just-containers/s6-overlay/releases/download/v$
 ENTRYPOINT ["/init"]
 
 FROM s6 as release
+LABEL org.opencontainers.image.authors="jeff@cusk.io"
 
 # Install some utilities for the release image
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
