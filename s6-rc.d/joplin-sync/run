@@ -1,15 +1,12 @@
 #!/command/execlineb -P
+foreground { /usr/local/bin/joplin-config-resolve }
 multisubstitute {
+    importas config JOPLIN_CONFIG_JSON_RESOLVED
     importas defaults JOPLIN_CONFIG_DEFAULTS_JSON
-    importas config JOPLIN_CONFIG_JSON
 }
 backtick -E sleeptime {
-    # Extract sync interval from JSON config files
-    ifelse { test -e \${config} } {
-        # (see https://stackoverflow.com/a/71416016/5905029 for jq expression)
-        jq ". * input | .[\"sync.interval\"]" \${defaults} \${config}
-    }
-    jq ".[\"sync.interval\"]" \${defaults}
+    # Extract sync interval from the resolved config
+    jq ". * input | .[\"sync.interval\"]" \${defaults} \${config}
 }
 ifelse { test \${sleeptime} -eq 0 } {
     foreground { echo "joplin sync: Disabled because \"sync.interval\" = 0" }

@@ -1,3 +1,6 @@
+# Resolve the config (inline base64 content, an explicit file, or the image
+# default) into the single path this service reads.
+foreground { /usr/local/bin/joplin-config-resolve }
 foreground {
     pipeline -w { sed -u "s/^/joplin version: /" }
     fdmove -c 2 1
@@ -6,8 +9,8 @@ foreground {
 # Merge JSON files in order of precedence and feed result to "joplin config --import"
 # (see https://stackoverflow.com/a/71416016/5905029 for jq expression)
 multisubstitute {
+    importas config JOPLIN_CONFIG_JSON_RESOLVED
     importas defaults JOPLIN_CONFIG_DEFAULTS_JSON
-    importas config JOPLIN_CONFIG_JSON
     importas required JOPLIN_CONFIG_REQUIRED_JSON
 }
 pipeline { jq "reduce inputs as \$i (.; . * \$i)" \${defaults} \${config} \${required} }

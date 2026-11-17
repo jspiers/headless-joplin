@@ -56,7 +56,7 @@ See the [official Joplin terminal documentation](https://joplinapp.org/terminal/
 #### How `headless-joplin` Configures Joplin
 `headless-joplin` leverages the Joplin terminal client's JSON configuration functionality to configure Joplin via three files:
 1. [default settings](joplin-config-defaults.json) suitable for most envisioned scenarios;
-2. an optional JSON configuration file which can either be provided as a Docker secret with the name `json-config.json`, or equivalently, by mounting a JSON file at a location specified via the `JOPLIN_CONFIG_JSON` environment variable, which defaults to `/run/secrets/joplin-config.json`; and
+2. an optional JSON configuration file, supplied in exactly one of three ways: mounted over the container's default `/run/secrets/joplin-config.json` (for example via a `docker-compose.yml` secret), pointed at by `JOPLIN_CONFIG_JSON_FILE`, or passed inline as base64 in `JOPLIN_CONFIG_JSON_B64`; and
 3. [required settings](joplin-config-required.json) expected by `headless-joplin` for its correct operation.[^2]
 
 For example, to load a `joplin-config.json` file from your current directory:
@@ -67,6 +67,37 @@ docker run --rm -p 3000:80 --name my_joplin_container -v ${PWD}/joplin-config.js
 ```
 
 In particular, consider specifying `api.token` override the default value for the sake of [security](#security-considerations).
+
+#### Config via the environment
+Instead of mounting a file, the config can be passed inline as base64:
+
+```
+docker run --rm -p 3000:80 \
+  -e JOPLIN_CONFIG_JSON_B64="$(base64 < joplin-config.json)" \
+  jspiers/headless-joplin:2.13.2-node-20.11.1
+```
+
+or by pointing at a file that exists *inside* the container:
+
+```
+docker run --rm -p 3000:80 -e JOPLIN_CONFIG_JSON_FILE=/config/joplin-config.json ...
+```
+
+Only one of `JOPLIN_CONFIG_JSON_B64` and `JOPLIN_CONFIG_JSON_FILE` may be set;
+supplying both fails at startup with a message. `JOPLIN_CONFIG_JSON` (the name
+this variable had before 2.13) still works as a deprecated alias and logs a
+warning. The `joplin-config` service resolves whichever was given into
+`/dev/shm/joplin-config.json` — for inline content that means decoding it into
+tmpfs, so the plaintext never becomes part of the image or the container's
+writable layer.
+
+Inline content is what makes config possible when the Docker daemon is remote:
+`volumes:`/`secrets:` are bind mounts resolved on the *daemon's* filesystem, so
+a file decrypted locally cannot be mounted into the container, while environment
+variables travel with the container-create request. See
+[config via environment variable](#config-via-environment-variable) for the
+trade-off, and [`examples/sops`](examples/sops) for keeping that config
+encrypted at rest.
 
 ## Docker Compose
 For most scenarios, it is more convenient to configure a `headless-joplin` container via a `docker-compose.yml` file.
@@ -105,6 +136,13 @@ For scenarios where the `headless-joplin` [Data API] is to be accessed via a pub
 
 ### API Token
 The default configuration sets the `api.token` to a value of `mytoken`. This should be set to a secret value provided to the container via a [JSON config file].
+
+### Config via environment variable
+`JOPLIN_CONFIG_JSON_B64` is visible to `docker inspect` and to `/proc/1/environ`
+inside the container, and Docker persists a container's environment in its
+metadata on the daemon's host. It keeps the plaintext out of the image, the repo
+and any mounted file, but where the daemon is local a `secrets:`-mounted file is
+the tighter option.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->

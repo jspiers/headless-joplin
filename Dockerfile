@@ -84,6 +84,59 @@ ENV S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0
 # Copy s6-rc files
 COPY s6-rc.d /etc/s6-overlay/s6-rc.d
 
+# Resolve the Joplin JSON config to one path that the s6 services read, from
+# either inline base64 content or an explicit file. Inline content is what makes
+# config possible when the Docker daemon is remote: bind mounts are resolved on
+# the daemon's host, whereas environment variables travel with the
+# container-create request. The destination is defined once, in
+# JOPLIN_CONFIG_JSON_RESOLVED below.
+COPY <<'EOF' /usr/local/bin/joplin-config-resolve
+#!/bin/sh
+# Supply the config in exactly one of two ways:
+#
+#   JOPLIN_CONFIG_JSON_B64   base64-encoded JSON content
+#   JOPLIN_CONFIG_JSON_FILE  path to a JSON file
+#
+# With neither set, the image's own /run/secrets/joplin-config.json is used.
+# JOPLIN_CONFIG_JSON is accepted as a deprecated alias for JOPLIN_CONFIG_JSON_FILE.
+set -eu
+
+config_path="${JOPLIN_CONFIG_JSON_RESOLVED:?JOPLIN_CONFIG_JSON_RESOLVED is not set}"
+content="${JOPLIN_CONFIG_JSON_B64:-}"
+file="${JOPLIN_CONFIG_JSON_FILE:-}"
+
+# JOPLIN_CONFIG_JSON is the pre-2.13 name for JOPLIN_CONFIG_JSON_FILE.
+if [ -z "$file" ] && [ -n "${JOPLIN_CONFIG_JSON:-}" ]; then
+    file="$JOPLIN_CONFIG_JSON"
+    echo "joplin config: JOPLIN_CONFIG_JSON is deprecated, use JOPLIN_CONFIG_JSON_FILE" >&2
+fi
+
+if [ -n "$content" ] && [ -n "$file" ]; then
+    echo "joplin config: set only one of JOPLIN_CONFIG_JSON_B64 or JOPLIN_CONFIG_JSON_FILE" >&2
+    exit 1
+fi
+
+umask 077
+rm -f "$config_path"
+
+if [ -n "$content" ]; then
+    printf '%s' "$content" | base64 -d > "$config_path"
+    jq -e . "$config_path" > /dev/null
+    echo "joplin config: decoded JOPLIN_CONFIG_JSON_B64" >&2
+elif [ -n "$file" ]; then
+    if [ ! -r "$file" ]; then
+        echo "joplin config: JOPLIN_CONFIG_JSON_FILE=$file is not readable" >&2
+        exit 1
+    fi
+    jq -e . "$file" > /dev/null
+    ln -sf "$file" "$config_path"
+    echo "joplin config: using JOPLIN_CONFIG_JSON_FILE=$file" >&2
+else
+    ln -sf /run/secrets/joplin-config.json "$config_path"
+fi
+EOF
+RUN chmod 0755 /usr/local/bin/joplin-config-resolve
+
 # This variable is used to enable/disable the joplin-log service (see ./s6-rc.d/joplin-log/run)
 ENV JOPLIN_LOG_ENABLED="false"
 
@@ -108,8 +161,15 @@ COPY <<EOF ./joplin-config-defaults.json
 }
 EOF
 
-# Set optional Joplin JSON config to empty dictionary
-ENV JOPLIN_CONFIG_JSON=/run/secrets/joplin-config.json
+# Optional Joplin JSON config, in exactly one of these forms (see
+# joplin-config-resolve). Empty means unset. The file below is the default when
+# neither variable is set; mount over it to supply a config the classic way.
+ENV JOPLIN_CONFIG_JSON_FILE=""
+ENV JOPLIN_CONFIG_JSON_B64=""
+
+# Where joplin-config-resolve puts the config and where the s6 services read it
+# from. Internal: callers supply one of the two variables above, not this path.
+ENV JOPLIN_CONFIG_JSON_RESOLVED=/dev/shm/joplin-config.json
 COPY <<EOF /run/secrets/joplin-config.json
 {}
 EOF
