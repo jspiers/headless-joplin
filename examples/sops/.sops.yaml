@@ -1,7 +1,7 @@
 keys:
-  # Dedicated user age key (installed by nix-darwin as a host secret).
+  # Dedicated user age key.
   - &user_jeff age15vx424nkfasw5q2fhsp5632l533s84pk6kt822yt0dlhxgt46eeqw4x38q
-  # Recovery recipients: either master can re-wrap these files.
+  # Recovery recipients: either key can re-wrap these files.
   - &daily_master age1ddykspzcwr74y4pg88zxluesja3rd6l7jwm995c9env50la6fves046zqv
   - &breakglass_master age1stuterc3erc74u8aky9luycwvvzn8vtpyhk50555muy7h6gvk5ps3xxsdt
 

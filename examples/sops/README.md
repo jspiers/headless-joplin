@@ -13,7 +13,7 @@ request, so they survive the hop.
 ## How it fits together
 
 - `secrets/joplin-config.sops.json` — the config, encrypted with [sops] to the
-  user's age key plus both recovery masters.
+  maintainer's age key plus recovery keys.
 - `.envrc` — [direnv] decrypts it into the shell and exports
   `JOPLIN_CONFIG_JSON_B64`; the plaintext only ever lives in the shell's
   environment.
@@ -45,9 +45,10 @@ Edit the config with:
 sops secrets/joplin-config.sops.json
 ```
 
-Project files are addressed to the user age key, so no master is needed. A
-`sync.interval` of `0` (the current value) disables periodic sync; set it to a
-positive number of seconds to have the container sync on its own.
+Files here are addressed to the maintainer's age key, so editing needs only
+that private key. A `sync.interval` of `0` (the current value) disables periodic
+sync; set it to a positive number of seconds to have the container sync on its
+own.
 
 ## Trade-offs
 
