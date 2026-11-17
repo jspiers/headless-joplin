@@ -1,0 +1,19 @@
+keys:
+  # Dedicated user age key (installed by nix-darwin as a host secret).
+  - &user_jeff age15vx424nkfasw5q2fhsp5632l533s84pk6kt822yt0dlhxgt46eeqw4x38q
+  # Recovery recipients: either master can re-wrap these files.
+  - &daily_master age1ddykspzcwr74y4pg88zxluesja3rd6l7jwm995c9env50la6fves046zqv
+  - &breakglass_master age1stuterc3erc74u8aky9luycwvvzn8vtpyhk50555muy7h6gvk5ps3xxsdt
+
+creation_rules:
+  # File-shaped secrets (JSON configs, certificates).
+  # The trailing .json is what lets sops auto-detect the type without
+  # --input-type on every decrypt/edit.
+  - path_regex: secrets/.*\.sops\.json$
+    key_groups:
+      - age: [*user_jeff, *daily_master, *breakglass_master]
+
+  # Encrypted environment files, should this project grow any.
+  - path_regex: secrets/.*\.sops\.env$
+    key_groups:
+      - age: [*user_jeff, *daily_master, *breakglass_master]

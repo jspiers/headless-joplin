@@ -1,0 +1,2 @@
+# The encrypted config also matches the root rule for joplin-config.*.json.
+!secrets/*.sops.json

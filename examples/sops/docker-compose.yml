@@ -1,0 +1,18 @@
+name: headless-joplin-sops
+
+services:
+  joplin:
+    # Build this image from the repository root first: `docker compose build`
+    image: ${JOPLIN_IMAGE:-jspiers/headless-joplin:2.13.2-node-20.11.1}
+    ports:
+      - "3000:80"
+    volumes:
+      - joplin-data:/home/node/.config/joplin
+    environment:
+      # `.envrc` decrypts secrets/joplin-config.sops.json into this variable.
+      # Compose sends environment variables with the container-create request,
+      # so a remote Docker daemon needs no config file on its own host.
+      JOPLIN_CONFIG_JSON_B64: ${JOPLIN_CONFIG_JSON_B64:?run this from a direnv-enabled shell; see README}
+
+volumes:
+  joplin-data: {}
