@@ -4,7 +4,9 @@
 
 # Build and install Joplin CLI into a first image
 # Set build arguments to specify particular versions of node and Joplin
-ARG NODE_VERSION=lts
+# NOTE: Joplin CLI >= 3.0 is required for encryption method 8 (SJCL4) support
+# which is used by Joplin Desktop >= 2.14 for E2EE
+ARG NODE_VERSION=20
 ARG JOPLIN_VERSION=latest
 FROM node:${NODE_VERSION}-bookworm-slim as base
 
